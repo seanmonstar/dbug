@@ -9,7 +9,6 @@ const assert = require('assert');
 const foo = require('../')('foo');
 const bar = require('../')('bar');
 
-
 const stdout = {
   lastWrite: '',
   write: function(out) {
@@ -24,11 +23,24 @@ const stderr = {
   }
 };
 
+// XXX: v0.8 support. remove when dropped
+var out = process.stdout.write;
+var err = process.stderr.write;
+function testOut(v) {
+  stdout.lastWrite = v;
+  return true;
+}
+function testErr(v) {
+  stderr.lastWrite = v;
+  return true;
+}
+
+
 module.exports = {
   'dbug': {
     'before': function() {
-      console._stdout = stdout;
-      console._stderr = stderr;
+      //console._stdout = stdout;
+      //console._stderr = stderr;
     },
     'matching': {
       'exact should be enabled': function() {
@@ -57,6 +69,9 @@ module.exports = {
       'should be enabled': function() {
         assert(foo.enabled);
 
+        process.stdout.write = testOut;
+        process.stderr.write = testErr;
+
         function contains(haystack, needle) {
           return haystack.indexOf(needle) !== -1;
         }
@@ -75,6 +90,9 @@ module.exports = {
         foo.error('uuuu');
         assert(contains(stderr.lastWrite, 'uuuu'));
         assert(contains(stderr.lastWrite, 'foo.error'));
+
+        process.stdout.write = out;
+        process.stderr.write = err;
       },
 
     },
@@ -90,17 +108,23 @@ module.exports = {
         assert.equal(typeof bar.error, 'function');
       },
       'should be disabled': function() {
+        process.stdout.write = testOut;
+        process.stderr.write = testErr;
+
         assert(!bar.enabled);
         bar('a');
         assert.notEqual(stdout.lastWrite, 'a');
         bar.warn('b');
         assert.notEqual(stdout.lastWrite, 'b');
+
+        process.stdout.write = out;
+        process.stderr.write = err;
       }
     },
 
     'after': function() {
-      console._stdout = process.stdout;
-      console._stderr = process.stderr;
+      //console._stdout = process.stdout;
+      //console._stderr = process.stderr;
     }
   }
 };
