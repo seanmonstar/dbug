@@ -1,5 +1,8 @@
 # dbug
 
+[![Build Status](https://travis-ci.org/seanmonstar/dbug.png?branch=master)](https://travis-ci.org/seanmonstar/dbug)
+[![NPM version](https://badge.fury.io/js/dbug.png)](http://badge.fury.io/js/dbug)
+
 A drop-in replacement for [debug][], for slightly more utility.
 
 ```js
