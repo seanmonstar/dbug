@@ -1,0 +1,28 @@
+{
+  "name": "dbug",
+  "version": "0.0.0",
+  "description": "debug improvements",
+  "main": "./lib/dbug.js",
+  "scripts": {
+    "test": "mocha --check-leaks --ui exports"
+  },
+  "devDependencies": {
+    "mocha": "1.x"
+  },
+  "readmeFilename": "README.md",
+  "keywords": [
+    "debug",
+    "dbug",
+    "log",
+    "logging",
+    "console"
+  ],
+  "author": "Sean McArthur <sean.monstar@gmail.com> (http://seanmonstar.com)",
+  "bugs": "https://github.com/seanmonstar/dbug/issues",
+  "homepage": "https://github.com/seanmonstar/dbug",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seanmonstar/dbug.git"
+  },
+  "license": "MPLv2.0"
+}
