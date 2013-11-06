@@ -6,6 +6,8 @@ process.env.DEBUG = 'foo';
 
 const assert = require('assert');
 
+const utc = require('utcstring');
+
 const foo = require('../')('foo');
 const bar = require('../')('bar');
 
@@ -35,6 +37,10 @@ function testErr(v) {
   return true;
 }
 
+
+function contains(haystack, needle) {
+  return haystack.indexOf(needle) !== -1;
+}
 
 module.exports = {
   'dbug': {
@@ -77,10 +83,6 @@ module.exports = {
 
         process.stdout.write = testOut;
         process.stderr.write = testErr;
-
-        function contains(haystack, needle) {
-          return haystack.indexOf(needle) !== -1;
-        }
 
         foo('z');
         assert(contains(stdout.lastWrite, 'z'));
@@ -134,6 +136,22 @@ module.exports = {
       'should look for DEBUG_COLOR to override tty': function() {
         process.env.DEBUG_COLOR = false;
         assert(require('../')('foo').plain);
+      },
+      'should format with utc': function() {
+        process.env.DEBUG_COLOR = false;
+        var plain = require('../')('foo');
+
+        process.stdout.write = testOut;
+
+        plain('bar baz quux');
+        assert(utc.has(stdout.lastWrite));
+        assert(contains(stdout.lastWrite, 'bar baz quux'));
+
+        plain('fuji', 'barbie');
+        assert(contains(stdout.lastWrite, 'fuji barbie'));
+
+
+        process.stdout.write = out;
       }
     },
 
