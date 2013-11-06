@@ -53,6 +53,12 @@ module.exports = {
       'substring should not be enabled': function() {
         var food = require('../')('food');
         assert(!food.enabled);
+      },
+      'should check process.env every time': function() {
+        process.env.DEBUG = 'derp';
+        assert(require('../')('derp').enabled);
+        process.env.DEBUG = 'foo';
+        assert(!require('../')('derp:herp').enabled);
       }
     },
     'enabled': {
@@ -93,8 +99,7 @@ module.exports = {
 
         process.stdout.write = out;
         process.stderr.write = err;
-      },
-
+      }
     },
     'disabled': {
       'should return a function': function() {
@@ -119,6 +124,16 @@ module.exports = {
 
         process.stdout.write = out;
         process.stderr.write = err;
+      }
+    },
+
+    'color': {
+      'should default to colored on tty': function() {
+        assert.equal(foo.colored, require('tty').isatty(2));
+      },
+      'should look for DEBUG_COLOR to override tty': function() {
+        process.env.DEBUG_COLOR = false;
+        assert(require('../')('foo').plain);
       }
     },
 
