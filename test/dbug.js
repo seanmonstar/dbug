@@ -134,11 +134,11 @@ module.exports = {
         assert.equal(foo.colored, require('tty').isatty(2));
       },
       'should look for DEBUG_COLOR to override tty': function() {
-        process.env.DEBUG_COLOR = false;
+        process.env.DEBUG_COLORS = false;
         assert(require('../')('foo').plain);
       },
       'should format with utc': function() {
-        process.env.DEBUG_COLOR = false;
+        process.env.DEBUG_COLORS = false;
         var plain = require('../')('foo');
 
         process.stdout.write = testOut;
