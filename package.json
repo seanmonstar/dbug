@@ -1,6 +1,6 @@
 {
   "name": "dbug",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "debug improvements",
   "main": "./lib/dbug.js",
   "scripts": {
