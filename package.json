@@ -7,8 +7,9 @@
     "test": "mocha --check-leaks --ui exports"
   },
   "devDependencies": {
+    "insist": "*",
     "mocha": "1.x",
-    "utcstring": "0.1.x"
+    "utcstring": "*"
   },
   "readmeFilename": "README.md",
   "keywords": [

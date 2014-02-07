@@ -4,7 +4,7 @@
 
 process.env.DEBUG = 'foo';
 
-const assert = require('assert');
+const assert = require('insist');
 
 const utc = require('utcstring');
 
@@ -37,7 +37,6 @@ function testErr(v) {
   return true;
 }
 
-
 function contains(haystack, needle) {
   return haystack.indexOf(needle) !== -1;
 }
@@ -62,9 +61,10 @@ module.exports = {
       },
       'should check process.env every time': function() {
         process.env.DEBUG = 'derp';
-        assert(require('../')('derp').enabled);
+        var derp = require('../')('derp');
+        assert(derp.enabled);
         process.env.DEBUG = 'foo';
-        assert(!require('../')('derp:herp').enabled);
+        assert(!derp.enabled);
       }
     },
     'enabled': {
@@ -133,11 +133,11 @@ module.exports = {
       'should default to colored on tty': function() {
         assert.equal(foo.colored, require('tty').isatty(2));
       },
-      'should look for DEBUG_COLOR to override tty': function() {
+      'should look for DEBUG_COLORS to override tty': function() {
         process.env.DEBUG_COLORS = false;
-        assert(require('../')('foo').plain);
+        assert(!require('../')('foo').colored);
       },
-      'should format with utc': function() {
+      'should format with utc if plain': function() {
         process.env.DEBUG_COLORS = false;
         var plain = require('../')('foo');
 
@@ -152,6 +152,36 @@ module.exports = {
 
 
         process.stdout.write = out;
+      },
+      'should check process.env every time': function() {
+        delete process.env.DEBUG_COLORS;
+        var check = require('../')('check');
+        assert(check.colored);
+        process.env.DEBUG_COLORS = false;
+        assert(!check.colored);
+      }
+    },
+
+    '__log': {
+      // woah. this is a private API. don't rely on it. i can blow it up
+      // any time. kablamo!
+      'should provide new log method': function() {
+        var d = require('../');
+        var counter = 0;
+        var arg;
+        d.__log = function(name, level, args) {
+          counter++;
+          assert.equal(name, 'foo');
+          assert.equal(level, 'debug');
+          assert.equal(args[0], arg);
+        };
+
+        var dbug = d('foo');
+        assert.equal(counter, 0);
+        dbug(arg = 'bar');
+        assert.equal(counter, 1);
+        dbug(arg = 'baz');
+        assert.equal(counter, 2);
       }
     },
 
