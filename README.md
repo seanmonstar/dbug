@@ -25,4 +25,6 @@ DEBUG=foo,quux
 DEBUG=foo // also acts as foo:*
 ```
 
+However, `dbug` will now check for chages to the env variable, so a script can enable debugging even after the dbugger has been created.
+
 [debug]: https://npmjs.org/package/debug
