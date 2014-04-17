@@ -92,12 +92,14 @@ module.exports = {
         assert(contains(stdout.lastWrite, 'x'));
         foo.info('w');
         assert(contains(stdout.lastWrite, 'w'));
-        assert(contains(stdout.lastWrite, 'foo.info'));
+        assert(contains(stdout.lastWrite, 'foo:'));
+        assert(contains(stdout.lastWrite, '\x1b[92mINFO'));
         foo.warn('v');
         assert(contains(stderr.lastWrite, 'v'));
         foo.error('uuuu');
         assert(contains(stderr.lastWrite, 'uuuu'));
-        assert(contains(stderr.lastWrite, 'foo.error'));
+        assert(contains(stderr.lastWrite, 'foo:'));
+        assert(contains(stderr.lastWrite, '\x1b[91mERROR'));
 
         process.stdout.write = out;
         process.stderr.write = err;
