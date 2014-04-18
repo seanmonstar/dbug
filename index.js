@@ -143,10 +143,15 @@ function dbugger(name) {
   return dbug;
 }
 
-module.exports = function dbug(name) {
-  return dbugger(name);
-};
+if (global.__dbug__1) {
+  module.exports = global.__dbug__1;
+} else {
+  module.exports = function dbug(name) {
+    return dbugger(name);
+  };
 
-// woah. this is a private API. don't rely on it. i can blow it up
-// any time. kablamo!
-module.exports.__log = log;
+  // woah. this is a private API. don't rely on it. i can blow it up
+  // any time. kablamo!
+  module.exports.__log = log;
+  global.__dbug__1 = module.exports;
+}
