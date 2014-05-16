@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*jshint camelcase: false*/
 
 const tty = require('tty').isatty(2);
 
@@ -11,13 +12,15 @@ const colors = {
   error: 1
 };
 
-function envDebugColor(colorString) {
+var dbug;
+
+var isColored = (function envDebugColor(colorString) {
   try {
-    return !!JSON.parse(colorString);
+    return colorString ? !!JSON.parse(colorString) : tty;
   } catch (ex) {
     return false;
   }
-}
+})(process.env.DEBUG_COLORS);
 
 function parseDEBUG(debugStr) {
   var names = [];
@@ -39,21 +42,11 @@ function parseDEBUG(debugStr) {
   };
 }
 
-function getter(obj, name, fn) {
-  Object.defineProperty(obj, name, {
-    get: fn
-  });
-}
+var env = process.env.DEBUG || '';
+var parsedEnv = parseDEBUG(env);
 
-function coerce(val) {
-  if (val instanceof Error) {
-    return val.stack || val.message;
-  }
-  return val;
-}
-
-function isEnabled(debugStr, name) {
-  var env = parseDEBUG(debugStr);
+function isEnabled(name) {
+  var env = parsedEnv;
   var match = env.skips.some(function(re){
     return re.test(name);
   });
@@ -71,87 +64,185 @@ function isEnabled(debugStr, name) {
   return true;
 }
 
-function isColored() {
-  var env = process.env.DEBUG_COLORS;
-  return env ? envDebugColor(env) : tty;
+function colored(name, level, args) {
+  var c = colors[level];
+  args[0] = [
+    '  ',
+    name + ':',
+    '\x1b[9' + c + 'm' + level.toUpperCase() + '\x1b[39m ',
+    '\x1b[90m' + args[0]
+  ].join('');
+  args.push('\x1b[39m');
+  console[level === 'debug' ? 'log' : level].apply(console, args);
 }
 
-function logger(name) {
-  name = name + ':';
-  function colored(level, text) {
-    text = coerce(text);
-    var c = colors[level];
-    return [
-      '  ',
-      name,
-      '\x1b[9' + c + 'm' + level.toUpperCase() + '\x1b[39m ',
-      '\x1b[90m' + text + '\x1b[39m'
-    ].join('');
-  }
-
-  function plain(level, text) {
-    text = coerce(text);
-
-    return new Date().toUTCString()
-      + ' ' + name + level.toUpperCase() + ' ' + text;
-  }
-
-  return function log(level, args) {
-    var format = isColored() ? colored : plain;
-    args[0] = format(level, args[0]);
-    console[level === 'debug' ? 'log' : level].apply(console, args);
-  };
+function plain(name, level, args) {
+  args[0] = new Date().toUTCString()
+    + ' ' + name + ':' + level.toUpperCase() + ' ' + args[0];
+  console[level === 'debug' ? 'log' : level].apply(console, args);
 }
 
-var loggers = {};
-function log(name, level, args) {
-  loggers[name](level, args);
-}
+function disabled() {}
+
+var log = isColored ? colored : plain;
+
+colored.__dbug = plain.__dbug = disabled.__dbug = true;
 
 
-function dbugger(name) {
 
+var dbuggers = {};
+function define(dbugger, name) {
   function logAt(level) {
-    return function canLog() {
-      if (!dbug.enabled) {
-        return;
+    return function dbug() {
+      var args = new Array(arguments.length);
+      var i = args.length;
+      while (i--) {
+        args[i] = arguments[i];
       }
-      module.exports.__log(name, level, arguments);
+      log(name, level, args);
     };
   }
-
-  var dbug = logAt('debug');
-  dbug.log = logAt('debug');
-  dbug.debug = dbug.log;
-  dbug.info = logAt('info');
-  dbug.warn = logAt('warn');
-  dbug.error = logAt('error');
-
-  getter(dbug, 'enabled', function enabled() {
-    var DEBUG = process.env.DEBUG;
-    if (dbug.__DEBUG === DEBUG) {
-      return dbug.__enabled;
+  Object.defineProperty(dbugger, 'enabled', {
+    configurable: true,
+    get: function getEnabled() {
+      return dbugger.__enabled;
+    },
+    set: function setEnabled(val) {
+      dbugger.__enabled = !!val;
+      if (dbugger.__enabled) {
+        dbugger.debug = logAt('debug');
+        dbugger.info = logAt('info');
+        dbugger.warn = logAt('warn');
+        dbugger.error = logAt('error');
+        dbugger.log = dbugger.debug;
+      } else {
+        dbugger.debug =
+        dbugger.info =
+        dbugger.warn =
+        dbugger.error =
+        dbugger.log =
+          disabled;
+      }
     }
-    dbug.__DEBUG = DEBUG;
-    return dbug.__enabled = isEnabled(DEBUG, name);
   });
 
-  getter(dbug, 'colored', isColored);
+  Object.defineProperty(dbugger, 'colored', {
+    configurable: true,
+    get: function getColored() {
+      return dbug.colored;
+    },
+    set: function setColored(val) {
+      dbug.colored = val;
+    }
+  });
 
-  loggers[name] = logger(name);
+  dbugger.enabled = isEnabled(name);
 
-  return dbug;
+  dbuggers[name] = dbugger;
 }
 
-if (global.__dbug__1) {
-  module.exports = global.__dbug__1;
-} else {
-  module.exports = function dbug(name) {
-    return dbugger(name);
+function dbugger(name) {
+  if (dbuggers[name]) {
+    return dbuggers[name];
+  }
+  var dbugger = function dbug() {
+    if (dbugger.__enabled) {
+      dbugger.debug.apply(this, arguments);
+    }
   };
 
-  // woah. this is a private API. don't rely on it. i can blow it up
-  // any time. kablamo!
-  module.exports.__log = log;
-  global.__dbug__1 = module.exports;
+  define(dbugger, name);
+
+  return dbugger;
 }
+
+
+function enableDbuggers() {
+  for (var name in dbuggers) {
+    if (isEnabled(name)) {
+      dbuggers[name].enabled = true;
+    } else {
+      dbuggers[name].enabled = false;
+    }
+  }
+}
+
+dbug = function dbug(name) {
+  return dbugger(name);
+};
+
+Object.defineProperty(dbug, 'colored', {
+  get: function getColored() {
+    return isColored;
+  },
+  set: function setColored(val) {
+    isColored = !!val;
+    if (!log.__dbug) {
+      return;
+    }
+    if (isColored) {
+      log = colored;
+    } else {
+      log = plain;
+    }
+  }
+});
+
+Object.defineProperty(dbug, 'env', {
+  get: function getEnv() {
+    return env;
+  },
+  set: function setEnv(val) {
+    env = val;
+    parsedEnv = parseDEBUG(env);
+    enableDbuggers();
+  }
+});
+
+// woah. this is a private API. don't rely on it. i can blow it up
+// any time. kablamo!
+Object.defineProperty(dbug, '__log', {
+  enumerable: false,
+  get: function() {},
+  set: function setLog(val) {
+    log = val;
+  }
+});
+
+dbug.version = require('./package.json').version;
+
+function decimalVersion(verStr) {
+  var parts = verStr.split('.');
+  var v = 0;
+  try {
+    v = parseInt(parts[0], 10) * 10000
+      + parseInt(parts[1], 10) * 100;
+    if (parts[2].indexOf('-') !== -1) {
+      parts = parts[2].split('-');
+      v += parseInt(parts[0], 10);
+      v += parseInt(parts[1], 16) / 1000; // a1, b1, b2, etc
+    } else {
+      v += parseInt(parts[2], 10);
+    }
+  } catch (e) {
+    return -1;
+  }
+}
+
+// merge different versions to use the same dbug instance
+if (!global.__dbug__1) {
+  global.__dbug__1 = dbug;
+}
+
+if (global.__dbug__) {
+  if (decimalVersion(dbug) > decimalVersion(global.__dbug__)) {
+    dbuggers = global.__dbug__.__dbuggers;
+    for (var k in dbuggers) {
+      dbuggers[k] = define(dbuggers[k], k);
+    }
+    global.__dbug__ = dbug;
+  }
+} else {
+  global.__dbug__ = dbug;
+}
+module.exports = global.__dbug__;

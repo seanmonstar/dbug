@@ -3,10 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 process.env.DEBUG = 'foo';
+process.env.DEBUG_COLORS = false;
 
 const assert = require('insist');
 
 const utc = require('utcstring');
+
+const dbug = require('../');
+const ORIG_COLORED = dbug.colored;
 
 const foo = require('../')('foo');
 const bar = require('../')('bar');
@@ -59,11 +63,11 @@ module.exports = {
         var food = require('../')('food');
         assert(!food.enabled);
       },
-      'should check process.env every time': function() {
-        process.env.DEBUG = 'derp';
+      'should check dbug.env every time': function() {
+        dbug.env = 'derp';
         var derp = require('../')('derp');
         assert(derp.enabled);
-        process.env.DEBUG = 'foo';
+        dbug.env = 'foo';
         assert(!derp.enabled);
       }
     },
@@ -80,6 +84,7 @@ module.exports = {
       },
       'should be enabled': function() {
         assert(foo.enabled);
+        foo.colored = true;
 
         process.stdout.write = testOut;
         process.stderr.write = testErr;
@@ -101,6 +106,7 @@ module.exports = {
         assert(contains(stderr.lastWrite, 'foo:'));
         assert(contains(stderr.lastWrite, '\x1b[91mERROR'));
 
+        dbug.colored = false;
         process.stdout.write = out;
         process.stderr.write = err;
       }
@@ -132,16 +138,12 @@ module.exports = {
     },
 
     'color': {
-      'should default to colored on tty': function() {
-        assert.equal(foo.colored, require('tty').isatty(2));
-      },
       'should look for DEBUG_COLORS to override tty': function() {
-        process.env.DEBUG_COLORS = false;
-        assert(!require('../')('foo').colored);
+        assert(!ORIG_COLORED);
       },
       'should format with utc if plain': function() {
-        process.env.DEBUG_COLORS = false;
-        var plain = require('../')('foo');
+        var plain = dbug('foo');
+        assert(!plain.colored);
 
         process.stdout.write = testOut;
 
@@ -155,11 +157,11 @@ module.exports = {
 
         process.stdout.write = out;
       },
-      'should check process.env every time': function() {
-        delete process.env.DEBUG_COLORS;
+      'should check dbug.colored every time': function() {
+        dbug.colored = true;
         var check = require('../')('check');
         assert(check.colored);
-        process.env.DEBUG_COLORS = false;
+        dbug.colored = false;
         assert(!check.colored);
       }
     },

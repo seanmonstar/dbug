@@ -25,6 +25,13 @@ DEBUG=foo,quux
 DEBUG=foo // also acts as foo:*
 ```
 
-However, `dbug` will now check for chages to the env variable, so a script can enable debugging even after the dbugger has been created.
+A user script wanting to dynamically enable or disable can do it a
+couple ways:
+
+```js
+require('dbug').env = 'foo,quux'; // just like ENV var
+var foo = require('dbug')('foo');
+foo.enabled = true;
+```
 
 [debug]: https://npmjs.org/package/debug

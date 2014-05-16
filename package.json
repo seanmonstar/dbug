@@ -3,11 +3,13 @@
   "version": "0.3.1",
   "description": "debug improvements",
   "scripts": {
+    "matcha": "matcha -I exports",
     "test": "mocha --check-leaks --ui exports"
   },
   "devDependencies": {
     "insist": "*",
     "mocha": "1.x",
+    "matcha": "*",
     "utcstring": "*"
   },
   "readmeFilename": "README.md",
@@ -20,5 +22,9 @@
   ],
   "author": "Sean McArthur <sean.monstar@gmail.com> (http://seanmonstar.com)",
   "repo": "seanmonstar/dbug",
-  "license": "MPLv2.0"
+  "license": "MPLv2.0",
+  "files": [
+    "LICENSE",
+    "index.js"
+  ]
 }
