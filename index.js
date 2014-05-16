@@ -193,7 +193,7 @@ Object.defineProperty(dbug, 'env', {
     return env;
   },
   set: function setEnv(val) {
-    env = val;
+    env = String(val || '');
     parsedEnv = parseDEBUG(env);
     enableDbuggers();
   }
@@ -229,11 +229,16 @@ function decimalVersion(verStr) {
   }
 }
 
-// merge different versions to use the same dbug instance
-if (!global.__dbug__1) {
-  global.__dbug__1 = dbug;
+// old way, doesn't use properties, so i can't slurp that well
+if (global.__dbug__1) {
+  global.__dbug__1.__log = function __dbug() {
+    log.apply(null, arguments);
+  };
 }
+global.__dbug__1 = dbug;
 
+
+// merge different versions to use the same dbug instance
 if (global.__dbug__) {
   if (decimalVersion(dbug) > decimalVersion(global.__dbug__)) {
     dbuggers = global.__dbug__.__dbuggers;
