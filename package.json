@@ -1,6 +1,6 @@
 {
   "name": "dbug",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "debug improvements",
   "scripts": {
     "matcha": "matcha -I exports",
@@ -21,7 +21,11 @@
     "console"
   ],
   "author": "Sean McArthur <sean.monstar@gmail.com> (http://seanmonstar.com)",
-  "repo": "seanmonstar/dbug",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seanmonstar/dbug.git"
+  },
+  "bugs": "https://github.com/seanmonstar/dbug/issues",
   "license": "MPLv2.0",
   "files": [
     "LICENSE",
