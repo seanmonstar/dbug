@@ -203,7 +203,9 @@ Object.defineProperty(dbug, 'env', {
 // any time. kablamo!
 Object.defineProperty(dbug, '__log', {
   enumerable: false,
-  get: function() {},
+  get: function() {
+    return log;
+  },
   set: function setLog(val) {
     log = val;
   }
