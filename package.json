@@ -1,6 +1,6 @@
 {
   "name": "dbug",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "debug improvements",
   "scripts": {
     "matcha": "matcha -I exports",

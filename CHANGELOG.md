@@ -1,5 +1,8 @@
 # dbug
 
+## v0.4.1 - 2014-05-26
+- fixed private api stuff
+
 ## v0.4.0 - 2014-05-16
 - changed dbug.enabled and dbug.colored to not look at process.env for changes
 - changed `dbug.enabled` and `colored` to be setters, so you change without using process.env
