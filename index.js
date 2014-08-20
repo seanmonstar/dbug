@@ -242,7 +242,7 @@ global.__dbug__1 = dbug;
 
 // merge different versions to use the same dbug instance
 if (global.__dbug__) {
-  if (decimalVersion(dbug) > decimalVersion(global.__dbug__)) {
+  if (decimalVersion(dbug.version) > decimalVersion(global.__dbug__.version)) {
     dbuggers = global.__dbug__.__dbuggers;
     for (var k in dbuggers) {
       dbuggers[k] = define(dbuggers[k], k);
