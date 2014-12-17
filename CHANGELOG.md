@@ -1,5 +1,8 @@
 # dbug
 
+## v0.4.2 - 2014-12-17
+- fixed global version comparison
+
 ## v0.4.1 - 2014-05-26
 - fixed private api stuff
 
